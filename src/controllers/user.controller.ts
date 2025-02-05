@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import pool from "../models/db";
-import { requiredCheck } from "../utils/fuction";
-import userStatus from "../utils/userStatusEnum";
+import { QueryResult, ResultSetHeader, RowDataPacket } from "mysql2";
+import userStatus from "../utils/userStatusType";
+import tokenType from "../utils/tokenType";
 
 export const getUsers = async (req: Request, res: Response) => {
   const userId = req.query.user_id;
@@ -21,35 +22,182 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const insertUser = async (body: any): Promise<void | Error> => {
-  // 쿼리 파라미터 유효성 검사
-  const requiredFields = [
-    { name: "user_id", type: "string", minLength: 4, maxLength: 20, pattern: /^[a-zA-Z0-9]+$/ },
-    { name: "password", type: "string", minLength: 8, maxLength: 20, pattern: /^[a-zA-Z0-9]+$/ },
-    { name: "email", type: "string", minLength: 4, maxLength: 20, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
-    { name: "nickname", type: "string", minLength: 2, maxLength: 20, pattern: /^[a-zA-Z0-9]+$/ },
-  ];
-  const requiredCheckResult = requiredCheck(requiredFields, body);
-  if (requiredCheckResult !== null) {
-    throw Error(requiredCheckResult.error);
+/**
+ * 회원정보 삽입
+ *
+ * @async
+ * @throw
+ * @param {string} id
+ * @param {string} password
+ * @param {string} email
+ * @param {string} nickname
+ * @returns {Promise<QueryResult>}
+ */
+export const insertUser = async (
+  id: string,
+  password: string,
+  email: string,
+  nickname: string
+): Promise<QueryResult> => {
+  const [result] = await pool.execute<ResultSetHeader[]>(
+    "INSERT INTO user_table (user_id, password, email, nickname) VALUES (?,?,?,?)",
+    [id, password, email, nickname]
+  );
+  if (result[0].affectedRows === 0) {
+    throw new Error("조건에 맞지 않아 행을 변경하지 못했습니다");
   }
+  console.log("유저 생성완료", result);
+  return result;
+};
 
-  try {
-    const userInsertResult = await pool.execute(
-      "INSERT INTO user_table (user_id, password, email, nickname) VALUES (?,?,?,?)",
-      [body.id, body.password, body.email, body.nickname]
-    );
-    console.log("생성완료", userInsertResult[0]);
-    const userStatusInsertResult = await pool.execute(
-      "INSERT INTO user_statuses_table (user_id, status) VALUES (?,?)",
-      [body.id, userStatus.EMAIL_VERIFIED]
-    );
-    console.log("유저 상태 생성 완료", userStatusInsertResult[0]);
-  } catch (err) {
-    if (typeof err === "string") {
-      throw Error(err);
-    } else {
-      throw Error(String(err));
-    }
+/**
+ * 회원상태 확인
+ *
+ * @param id
+ * @param userStatus
+ * @returns
+ */
+export const checkUserStatus = async (id: string, userStatus?: userStatus): Promise<string[] | void> => {
+  const query = "SELECT status FROM user_statuses_table WHERE user_id = ?" + (userStatus ? " AND status = ?" : "");
+  const valuse = [id];
+  if (userStatus) {
+    valuse.push(userStatus);
   }
+  const [rows] = await pool.execute<RowDataPacket[]>(query, valuse);
+  console.log("유저 상태 체크 성공", rows);
+  if (rows.length === 0) {
+    return;
+  }
+  return rows.map((row) => row.status);
+};
+
+/**
+ * 회원상태 삽입
+ *
+ * @async
+ * @throw
+ * @param {string} id
+ * @param {userStatus} userStatus
+ * @returns {Promise<QueryResult>}
+ */
+export const insertUserStatus = async (id: string, userStatus: userStatus): Promise<QueryResult> => {
+  const [result] = await pool.execute<ResultSetHeader[]>(
+    "INSERT INTO user_statuses_table (user_id, status) VALUES (?,?)",
+    [id, userStatus]
+  );
+  if (result[0].affectedRows === 0) {
+    throw new Error("조건에 맞지 않아 행을 변경하지 못했습니다");
+  }
+  console.log("유저 상태 생성 완료", result);
+  return result;
+};
+
+/**
+ * 회원상태 삭제
+ *
+ * @async
+ * @throw
+ * @param {string} id
+ * @param {userStatus} userStatus
+ * @returns {Promise<QueryResult>}
+ */
+export const deleteUserStatus = async (id: string, userStatus: userStatus): Promise<QueryResult> => {
+  const [result] = await pool.execute<ResultSetHeader[]>(
+    "DELETE FROM user_statuses_table WHERE user_id = ? AND status = ?",
+    [id, userStatus]
+  );
+  if (result[0].affectedRows === 0) {
+    throw new Error("조건에 맞지 않아 행을 변경하지 못했습니다");
+  }
+  console.log("유저 상태 삭제 완료", result);
+  return result;
+};
+
+/**
+ * 토큰 삽입
+ *
+ * @async
+ * @throw
+ * @param {string} id
+ * @param {tokenType} tokenType
+ * @param {string} tokenValue
+ * @param {Date} expiresAt
+ * @returns {Promise<QueryResult>}
+ */
+export const insertToken = async (
+  id: string,
+  tokenType: tokenType,
+  tokenValue: string,
+  expiresAt: Date
+): Promise<QueryResult> => {
+  const [result] = await pool.execute<ResultSetHeader[]>(
+    "INSERT INTO token_table (user_id, token_type, token_value, expires_at) VALUES (?,?,?,?)",
+    [id, tokenType, tokenValue, expiresAt]
+  );
+  if (result[0].affectedRows === 0) {
+    throw new Error("조건에 맞지 않아 행을 변경하지 못했습니다");
+  }
+  console.log("토큰 생성 완료", result);
+  return result;
+};
+
+/**
+ * 토큰 삭제
+ *
+ * @async
+ * @throw
+ * @param {string} id - 삭제할 유저의 id
+ * @param {tokenType} tokenType - 삭제할 토큰의 타입
+ * @param {string} tokenValue - 삭제할 토큰의 값
+ * @returns {Promise<QueryResult>} - 삭제 성공시 void, 실패시 에러
+ */
+export const deleteToken = async (id: string, tokenType: tokenType, tokenValue: string): Promise<QueryResult> => {
+  const [result] = await pool.execute<ResultSetHeader[]>(
+    "DELETE FROM token_table WHERE user_id = ? AND token_type = ? AND token_value = ?",
+    [id, tokenType, tokenValue]
+  );
+  if (result[0].affectedRows === 0) {
+    throw new Error("조건에 맞지 않아 행을 변경하지 못했습니다");
+  }
+  console.log("토큰 삭제 완료", result);
+  return result;
+};
+
+/**
+ * 이메일 인증 토큰 검사
+ *
+ * @async
+ * @throw
+ * @param {string} randomCode - 이메일 인증 랜덤 번호
+ * @returns {Promise<string>} 검색에 성공시 사용자 user_id를 반환
+ */
+export const checkEmailToken = async (randomCode: string): Promise<string> => {
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    "SELECT user_id FROM token_table WHERE token_type = ? AND token_value = ? AND expires_at > NOW()",
+    [tokenType.EMAIL_VERIFICATION_TOKEN, randomCode]
+  );
+  if ([rows].length === 0) {
+    throw Error("일치하는 이메일 토큰이 없습니다.");
+  }
+  console.log("이메일 체크 성공", rows);
+  return rows[0].user_id;
+};
+
+/**
+ * 일반 로그인시 id, password 검사
+ *
+ * @async
+ * @throw
+ * @param id
+ * @param password
+ */
+export const checkUser = async (id: string, password: string): Promise<void> => {
+  const [rows] = await pool.execute<RowDataPacket[]>("SELECT user_id FROM user_table WHERE id = ? AND password = ?", [
+    id,
+    password,
+  ]);
+  if ([rows].length === 0) {
+    throw Error("로그인 실패");
+  }
+  console.log("id, password 체크 성공", rows);
 };
