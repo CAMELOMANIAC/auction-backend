@@ -3,6 +3,7 @@ import pool from "../models/db";
 import { QueryResult, ResultSetHeader, RowDataPacket } from "mysql2";
 import userStatus from "../utils/userStatusType";
 import tokenType from "../utils/tokenType";
+import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
 
 export const getUsers = async (req: Request, res: Response) => {
   const userId = req.query.user_id;
@@ -26,7 +27,7 @@ export const getUsers = async (req: Request, res: Response) => {
  * 회원정보 삽입
  *
  * @async
- * @throw
+ * @throws
  * @param {string} id
  * @param {string} password
  * @param {string} email
@@ -44,7 +45,7 @@ export const insertUser = async (
     [id, password, email, nickname]
   );
   if (result[0].affectedRows === 0) {
-    throw new Error("조건에 맞지 않아 행을 변경하지 못했습니다");
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
   }
   console.log("유저 생성완료", result);
   return result;
@@ -107,7 +108,7 @@ export const deleteUserStatus = async (id: string, userStatus: userStatus): Prom
     [id, userStatus]
   );
   if (result[0].affectedRows === 0) {
-    throw new Error("조건에 맞지 않아 행을 변경하지 못했습니다");
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
   }
   console.log("유저 상태 삭제 완료", result);
   return result;
@@ -135,7 +136,7 @@ export const insertToken = async (
     [id, tokenType, tokenValue, expiresAt]
   );
   if (result[0].affectedRows === 0) {
-    throw new Error("조건에 맞지 않아 행을 변경하지 못했습니다");
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
   }
   console.log("토큰 생성 완료", result);
   return result;
@@ -157,7 +158,7 @@ export const deleteToken = async (id: string, tokenType: tokenType, tokenValue: 
     [id, tokenType, tokenValue]
   );
   if (result[0].affectedRows === 0) {
-    throw new Error("조건에 맞지 않아 행을 변경하지 못했습니다");
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
   }
   console.log("토큰 삭제 완료", result);
   return result;
@@ -177,7 +178,7 @@ export const checkEmailToken = async (randomCode: string): Promise<string> => {
     [tokenType.EMAIL_VERIFICATION_TOKEN, randomCode]
   );
   if ([rows].length === 0) {
-    throw Error("일치하는 이메일 토큰이 없습니다.");
+    throw new Error(errorCodeAnswer[ErrorCode.EMAIL_VERIFICATION_NOT_FOUND].message);
   }
   console.log("이메일 체크 성공", rows);
   return rows[0].user_id;
@@ -190,14 +191,16 @@ export const checkEmailToken = async (randomCode: string): Promise<string> => {
  * @throw
  * @param id
  * @param password
+ * @returns {Promise<{ nickname: string }>} 검색 성공시 사용자의 id, nickname를 반환
  */
-export const checkUser = async (id: string, password: string): Promise<void> => {
-  const [rows] = await pool.execute<RowDataPacket[]>("SELECT user_id FROM user_table WHERE id = ? AND password = ?", [
-    id,
-    password,
-  ]);
+export const checkUser = async (id: string, password: string): Promise<{ nickname: string }> => {
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    "SELECT user_id, nickname FROM user_table WHERE id = ? AND password = ?",
+    [id, password]
+  );
   if ([rows].length === 0) {
-    throw Error("로그인 실패");
+    throw new Error(errorCodeAnswer[ErrorCode.USER_NOT_FOUND].message);
   }
   console.log("id, password 체크 성공", rows);
+  return rows.map((row) => ({ nickname: row.nickname }))[0];
 };
