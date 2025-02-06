@@ -1,12 +1,14 @@
 import express from "express";
 import routes from "./routes";
 import pool from "./models/db";
+import cookieParser from "cookie-parser";
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use("/", routes);
 
