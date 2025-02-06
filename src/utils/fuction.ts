@@ -1,3 +1,6 @@
+import { Response } from "express";
+import { errorCodeAnswer } from "./errorCode";
+
 type requiredFields = {
   name: string;
   type: string;
@@ -51,4 +54,29 @@ export const requiredCheck = (
     }
   }
   return null;
+};
+
+/**
+ * 발생한 에러를 서비스 계층에서 핸들링 및 응답하기 위한 함수
+ *
+ * @param {any} error
+ * @param {Response} res
+ */
+export const handlerError = (error: any, res: Response) => {
+  if (error instanceof Error) {
+    console.error("에러가 발생했습니다:", error);
+    const matchingError = Object.keys(errorCodeAnswer).some((errorCode, index) => {
+      if (error.message === errorCode) {
+        res
+          .status(errorCodeAnswer[index].status)
+          .json({ message: errorCodeAnswer[index].message, error: error.message });
+        return;
+      }
+    });
+    if (!matchingError) {
+      res.status(500).json({ message: "에러가 발생했습니다.", error });
+    }
+  } else {
+    res.status(500).json({ message: "알수없는 오류 발생했습니다.", error });
+  }
 };
