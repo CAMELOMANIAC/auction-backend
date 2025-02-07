@@ -21,11 +21,18 @@ export const loginUser = async (req: Request, res: Response) => {
   // 쿼리 파라미터 유효성 검사
   const requiredFields = [
     { name: "id", type: "string", minLength: 4, maxLength: 15, pattern: /^[a-zA-Z0-9]+$/ },
-    { name: "password", type: "string", minLength: 8, maxLength: 20, pattern: /^[a-zA-Z0-9]+$/ },
+    {
+      name: "password",
+      type: "string",
+      minLength: 8,
+      maxLength: 20,
+      pattern: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]+$/,
+    },
   ];
   const requiredCheckResult = requiredCheck(requiredFields, body);
   if (requiredCheckResult !== null) {
     res.status(400).json({ error: requiredCheckResult.error });
+    return;
   }
 
   try {
