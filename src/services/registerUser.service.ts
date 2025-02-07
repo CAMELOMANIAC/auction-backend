@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import {
   checkEmailToken,
-  checkIdDuplication,
-  checkNicknameDuplication,
   deleteToken,
   deleteUserStatus,
   insertToken,
@@ -14,7 +12,6 @@ import { sendMail } from "../utils/nodemailer";
 import { randomUUID } from "crypto";
 import tokenType from "../utils/tokenType";
 import userStatus from "../utils/userStatusType";
-import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
 
 /**
  * 일반 회원가입
@@ -103,88 +100,6 @@ export const verifyEmail = async (req: Request, res: Response) => {
     const userId = await checkEmailToken(randomCode);
     await deleteToken(userId, tokenType.EMAIL_VERIFICATION_TOKEN, randomCode);
     await deleteUserStatus(userId, userStatus.EMAIL_VERIFY_REQUIRED);
-    res.status(200);
-  } catch (error) {
-    handlerError(error, res);
-  }
-};
-
-/**
- * id 중복체크
- */
-export const checkRegisterId = async (req: Request, res: Response) => {
-  const id = req.params.id;
-  const requiredFields = [{ name: "id", type: "string", minLength: 4, maxLength: 15, pattern: /^[a-zA-Z0-9]+$/ }];
-  const requiredCheckResult = requiredCheck(requiredFields, { id });
-  if (requiredCheckResult !== null) {
-    res.status(400).json({ message: requiredCheckResult.error });
-    return;
-  }
-  try {
-    const isDuplicate = await checkIdDuplication(id);
-    if (isDuplicate) {
-      throw new Error(errorCodeAnswer[ErrorCode.ID_DUPLICATED].message);
-    }
-    res.status(200);
-  } catch (error) {
-    handlerError(error, res);
-  }
-};
-
-/**
- * nickname 중복체크
- */
-export const checkRegisterNickname = async (req: Request, res: Response) => {
-  const nickname = req.params.nickname;
-  const requiredFields = [
-    {
-      name: "nickname",
-      type: "string",
-      minLength: 2,
-      maxLength: 12,
-      pattern: /^[a-zA-Z0-9가-힣]+$/,
-    },
-  ];
-  const requiredCheckResult = requiredCheck(requiredFields, { nickname });
-  if (requiredCheckResult !== null) {
-    res.status(400).json({ message: requiredCheckResult.error });
-    return;
-  }
-  try {
-    const isDuplicate = await checkNicknameDuplication(nickname);
-    if (isDuplicate) {
-      throw new Error(errorCodeAnswer[ErrorCode.NICKNAME_DUPLICATED].message);
-    }
-    res.status(200);
-  } catch (error) {
-    handlerError(error, res);
-  }
-};
-
-/**
- * email 중복체크
- */
-export const checkRegisterEmail = async (req: Request, res: Response) => {
-  const email = req.params.email;
-  const requiredFields = [
-    {
-      name: "email",
-      type: "string",
-      minLength: 1,
-      maxLength: 45,
-      pattern: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
-    },
-  ];
-  const requiredCheckResult = requiredCheck(requiredFields, { email });
-  if (requiredCheckResult !== null) {
-    res.status(400).json({ message: requiredCheckResult.error });
-    return;
-  }
-  try {
-    const isDuplicate = await checkNicknameDuplication(email);
-    if (isDuplicate) {
-      throw new Error(errorCodeAnswer[ErrorCode.EMAIL_DUPLICATED].message);
-    }
     res.status(200);
   } catch (error) {
     handlerError(error, res);

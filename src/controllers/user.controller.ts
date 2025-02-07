@@ -212,7 +212,7 @@ export const checkUser = async (id: string, password: string): Promise<{ nicknam
  * @param {string} id
  * @returns {Promise<boolean>} 중복이 있으면 참을 없을시 거짓을 반환(에러는 반환하지 않음 주의)
  */
-export const checkIdDuplication = async (id: string): Promise<boolean> => {
+export const handleCheckIdDuplication = async (id: string): Promise<boolean> => {
   const [rows] = await pool.execute<RowDataPacket[]>("SELECT user_id FROM user_table WHERE user_id = ?", [id]);
   return [rows].length > 0;
 };
@@ -224,7 +224,7 @@ export const checkIdDuplication = async (id: string): Promise<boolean> => {
  * @param {string} nickname
  * @returns {Promise<boolean>} 중복이 있으면 참을 없을시 거짓을 반환(에러는 반환하지 않음 주의)
  */
-export const checkNicknameDuplication = async (nickname: string): Promise<boolean> => {
+export const handleCheckNicknameDuplication = async (nickname: string): Promise<boolean> => {
   const [rows] = await pool.execute<RowDataPacket[]>("SELECT nickname FROM user_table WHERE nickname = ?", [nickname]);
   return [rows].length > 0;
 };
@@ -236,7 +236,7 @@ export const checkNicknameDuplication = async (nickname: string): Promise<boolea
  * @param {string} email
  * @returns {Promise<boolean>} 중복이 있으면 참을 없을시 거짓을 반환(에러는 반환하지 않음 주의)
  */
-export const checkEmailDuplication = async (email: string): Promise<boolean> => {
+export const handleCheckEmailDuplication = async (email: string): Promise<boolean> => {
   const [rows] = await pool.execute<RowDataPacket[]>("SELECT email FROM user_table WHERE email = ?", [email]);
   return [rows].length > 0;
 };
