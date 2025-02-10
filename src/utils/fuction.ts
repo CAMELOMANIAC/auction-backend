@@ -65,16 +65,15 @@ export const requiredCheck = (
 export const handlerError = (error: any, res: Response) => {
   if (error instanceof Error) {
     console.error("에러가 발생했습니다:", error);
-    const matchingError = Object.keys(errorCodeAnswer).some((errorCode, index) => {
-      if (error.message === errorCode) {
-        res
-          .status(errorCodeAnswer[index].status)
-          .json({ message: errorCodeAnswer[index].message, error: error.message });
-        return;
-      }
-    });
-    if (!matchingError) {
-      res.status(500).json({ message: "에러가 발생했습니다.", error });
+    const matchingError = Object.entries(errorCodeAnswer).find(
+      ([_errorCode, errorInfo]) => error.message === errorInfo.message
+    );
+
+    if (matchingError) {
+      const [, errorInfo] = matchingError;
+      res.status(errorInfo.status).json({ message: errorInfo.message, error: error.message });
+    } else {
+      res.status(500).json({ message: "에러가 발생했습니다.", error: error.message });
     }
   } else {
     res.status(500).json({ message: "알수없는 오류 발생했습니다.", error });
