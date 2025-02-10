@@ -6,7 +6,7 @@ const router = Router();
 
 //회원가입
 router.post("/register", registerUser);
-router.delete("/verify-email", verifyEmail);
+router.delete("/verify-email/:code", verifyEmail);
 
 //로그인
 router.post("/login", loginUser);
