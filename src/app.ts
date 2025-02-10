@@ -2,10 +2,12 @@ import express from "express";
 import routes from "./routes";
 import pool from "./models/db";
 import cookieParser from "cookie-parser";
+import corsMiddleware from "./middlewares/corsMiddleware";
 
 const app = express();
 const port = 3000;
 
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
