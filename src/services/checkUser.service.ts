@@ -6,6 +6,7 @@ import {
   handleCheckNicknameDuplication,
 } from "../controllers/user.controller";
 import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
+
 /**
  * id 중복체크
  */
@@ -21,7 +22,7 @@ export const checkIdDuplication = async (req: Request, res: Response) => {
     if (isDuplicate) {
       throw new Error(errorCodeAnswer[ErrorCode.ID_DUPLICATED].message);
     }
-    res.status(200);
+    res.sendStatus(200);
   } catch (error) {
     handlerError(error, res);
   }
@@ -42,7 +43,7 @@ export const checkNameDuplication = async (req: Request, res: Response) => {
     if (isDuplicate) {
       throw new Error(errorCodeAnswer[ErrorCode.NICKNAME_DUPLICATED].message);
     }
-    res.status(200);
+    res.sendStatus(200);
   } catch (error) {
     handlerError(error, res);
   }
@@ -63,7 +64,7 @@ export const checkEmailDuplication = async (req: Request, res: Response) => {
     if (isDuplicate) {
       throw new Error(errorCodeAnswer[ErrorCode.EMAIL_DUPLICATED].message);
     }
-    res.status(200);
+    res.sendStatus(200);
   } catch (error) {
     handlerError(error, res);
   }

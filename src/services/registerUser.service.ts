@@ -65,12 +65,12 @@ const registerUser = async (req: Request, res: Response) => {
       to: body.email,
       subject: "경매 사이트 회원가입 인증 메일입니다",
       html:
-        "<h1>경매 사이트 인증 메일입니다</h1> <h2><a href='http://localhost:3000/email-verify/" +
+        `<h1>경매 사이트 인증 메일입니다</h1> <h2><a href='${process.env.FRONT_URL}/register/email-verify/` +
         randomCode +
         "'>인증 링크</a> </h2>" +
         "이 링크는 30분동안 사용할 수 있습니다",
     });
-    res.status(201);
+    res.sendStatus(201);
   } catch (error) {
     handlerError(error, res);
   }
@@ -100,7 +100,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     const userId = await checkEmailToken(randomCode);
     await deleteToken(userId, tokenType.EMAIL_VERIFICATION_TOKEN, randomCode);
     await deleteUserStatus(userId, userStatus.EMAIL_VERIFY_REQUIRED);
-    res.status(200);
+    res.sendStatus(200);
   } catch (error) {
     handlerError(error, res);
   }
