@@ -1,18 +1,20 @@
 import { Request, Response } from "express";
 import { handlerError, requiredCheck } from "../utils/fuction";
-import { checkUser, checkUserStatus, insertToken } from "../controllers/user.controller";
+import { checkUser, checkUserStatus } from "../controllers/user.controller";
 import { userStatusErrorRequestAnswer } from "../utils/userStatusType";
 import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 import tokenType from "../utils/tokenType";
+import { deleteToken, insertToken } from "../controllers/token.controller";
 
 /**
  * 일반 로그인
  *
  * 1. id, password 검사(checkUser)
  * 2. DB에서 회원상태 검사(checkUserStatus)
- * 3. JWT access, refresh 생성
- * 4. 쿠키로 생성하도록 응답 전송
+ * 3. JWT access, refresh 생성 및 응답 전송
+ * 4. DB에 저장된 리프래시 토큰을 제거(deleteToken)
+ * 5. DB에 리프래시 토큰을 새로 저장(insertToken)
  *
  * @async
  * @param {Request} req
@@ -59,7 +61,11 @@ export const loginUser = async (req: Request, res: Response) => {
       sub: body.id,
       aud: process.env.BASE_URL,
     };
-    const accessToken = jwt.sign(accessTokenPayload, process.env.JWT_ACCESS_SECRET_KEY, { expiresIn: "15m" });
+    const accessToken = jwt.sign(accessTokenPayload, process.env.JWT_ACCESS_SECRET_KEY, {
+      expiresIn: "15m",
+      audience: `${process.env.BASE_URL}`,
+      issuer: `${process.env.BASE_URL}/auth/login`,
+    });
     const refreshTokenJWTID = randomUUID();
     const refreshTokenPayload = {
       iss: process.env.BASE_URL + "/auth/login",
@@ -67,17 +73,21 @@ export const loginUser = async (req: Request, res: Response) => {
       aud: process.env.BASE_URL + "/auth/refresh",
       jwtid: refreshTokenJWTID,
     };
-    const refreshToken = jwt.sign(refreshTokenPayload, process.env.JWT_REFRESH_SECRET_KEY, { expiresIn: "7d" });
+    const refreshToken = jwt.sign(refreshTokenPayload, process.env.JWT_REFRESH_SECRET_KEY, {
+      expiresIn: "7d",
+      audience: `${process.env.BASE_URL}/auth/refresh`,
+      issuer: `${process.env.BASE_URL}/auth/login`,
+    });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     });
+    await deleteToken(body.id, tokenType.REFRESH_TOKEN, refreshTokenJWTID);
     await insertToken(
       body.id,
       tokenType.REFRESH_TOKEN,
       refreshTokenJWTID,
-      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) //7일
     );
 
     res.json({ id: body.id, nickname: nickname, accessToken: accessToken });
