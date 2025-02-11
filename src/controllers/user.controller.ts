@@ -1,27 +1,8 @@
-import { Request, Response } from "express";
 import pool from "../models/db";
 import { QueryResult, ResultSetHeader, RowDataPacket } from "mysql2";
 import userStatus from "../utils/userStatusType";
 import tokenType from "../utils/tokenType";
 import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
-
-export const getUsers = async (req: Request, res: Response) => {
-  const userId = req.query.user_id;
-
-  // 쿼리 파라미터 유효성 검사
-  if (!userId) {
-    res.status(400).json({ error: "user_id 쿼리 파라미터가 필요합니다." });
-    return;
-  }
-
-  try {
-    const [rows] = await pool.execute("SELECT * FROM user_login_table WHERE user_id = ?", [userId]);
-    res.json(rows);
-  } catch (err) {
-    console.error("데이터베이스 쿼리 중 에러가 발생했습니다:", err);
-    res.status(500).json({ error: "데이터베이스 쿼리 중 에러가 발생했습니다." });
-  }
-};
 
 /**
  * 회원정보 삽입
@@ -119,10 +100,10 @@ export const deleteUserStatus = async (id: string, userStatus: userStatus): Prom
  *
  * @async
  * @throw
- * @param {string} id
- * @param {tokenType} tokenType
- * @param {string} tokenValue
- * @param {Date} expiresAt
+ * @param {string} id - 삽입할 유저의 id
+ * @param {tokenType} tokenType - 삽입할 토큰의 타입
+ * @param {string} tokenValue - 삽입할 토큰의 값
+ * @param {Date} expiresAt - 토큰 만료시간
  * @returns {Promise<QueryResult>}
  */
 export const insertToken = async (
@@ -191,18 +172,18 @@ export const checkEmailToken = async (randomCode: string): Promise<string> => {
  * @throw
  * @param id
  * @param password
- * @returns {Promise<{ nickname: string }>} 검색 성공시 사용자의 id, nickname를 반환
+ * @returns {Promise<{ nick_name: string }>} 검색 성공시 사용자의 nickname를 반환
  */
 export const checkUser = async (id: string, password: string): Promise<{ nickname: string }> => {
   const [rows] = await pool.execute<RowDataPacket[]>(
-    "SELECT user_id, nickname FROM user_table WHERE id = ? AND password = ?",
+    "SELECT user_id, nick_name FROM user_table WHERE user_id = ? AND password = ?",
     [id, password]
   );
   if (rows.length === 0) {
     throw new Error(errorCodeAnswer[ErrorCode.USER_NOT_FOUND].message);
   }
   console.log("id, password 체크 성공", rows);
-  return rows.map((row) => ({ nickname: row.nickname }))[0];
+  return rows.map((row) => ({ nickname: row.nick_name }))[0];
 };
 
 /**
