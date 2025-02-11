@@ -1,17 +1,12 @@
 import { Request, Response } from "express";
-import {
-  checkEmailToken,
-  deleteToken,
-  deleteUserStatus,
-  insertToken,
-  insertUser,
-  insertUserStatus,
-} from "../controllers/user.controller";
+import { deleteUserStatus, insertUser, insertUserStatus } from "../controllers/user.controller";
 import { handlerError, requiredCheck } from "../utils/fuction";
 import { sendMail } from "../utils/nodemailer";
 import { randomUUID } from "crypto";
 import tokenType from "../utils/tokenType";
 import userStatus from "../utils/userStatusType";
+import { checkEmailToken, deleteToken, insertToken } from "../controllers/token.controller";
+import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
 
 /**
  * 일반 회원가입
@@ -90,13 +85,12 @@ export default registerUser;
  */
 export const verifyEmail = async (req: Request, res: Response) => {
   const randomCode = req.params.code;
-  // 쿼리 파라미터 유효성 검사
-  if (!randomCode) {
-    res.status(400).json({ message: "code 파라메터가 제공되어야합니다." });
-    return;
-  }
 
   try {
+    // 쿼리 파라미터 유효성 검사
+    if (!randomCode) {
+      throw new Error(errorCodeAnswer[ErrorCode.VALUE_REQUIRED].message);
+    }
     const userId = await checkEmailToken(randomCode);
     await deleteToken(userId, tokenType.EMAIL_VERIFICATION_TOKEN, randomCode);
     await deleteUserStatus(userId, userStatus.EMAIL_VERIFY_REQUIRED);

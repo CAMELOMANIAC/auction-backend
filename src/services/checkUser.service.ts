@@ -12,12 +12,11 @@ import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
  */
 export const checkIdDuplication = async (req: Request, res: Response) => {
   const id = req.query.value;
-  // 쿼리 파라미터 유효성 검사
-  if (!id || typeof id !== "string") {
-    res.status(400).json({ message: "value 쿼리가 제공되어야합니다." });
-    return;
-  }
   try {
+    // 쿼리 파라미터 유효성 검사
+    if (!id || typeof id !== "string") {
+      throw new Error(errorCodeAnswer[ErrorCode.VALUE_REQUIRED].message);
+    }
     const isDuplicate = await handleCheckIdDuplication(id);
     if (isDuplicate) {
       throw new Error(errorCodeAnswer[ErrorCode.ID_DUPLICATED].message);
@@ -33,12 +32,11 @@ export const checkIdDuplication = async (req: Request, res: Response) => {
  */
 export const checkNameDuplication = async (req: Request, res: Response) => {
   const nickname = req.query.value;
-  // 쿼리 파라미터 유효성 검사
-  if (!nickname || typeof nickname !== "string") {
-    res.status(400).json({ message: "value 쿼리가 제공되어야합니다." });
-    return;
-  }
   try {
+    // 쿼리 파라미터 유효성 검사
+    if (!nickname || typeof nickname !== "string") {
+      throw new Error(errorCodeAnswer[ErrorCode.VALUE_REQUIRED].message);
+    }
     const isDuplicate = await handleCheckNicknameDuplication(nickname);
     if (isDuplicate) {
       throw new Error(errorCodeAnswer[ErrorCode.NICKNAME_DUPLICATED].message);
@@ -54,12 +52,11 @@ export const checkNameDuplication = async (req: Request, res: Response) => {
  */
 export const checkEmailDuplication = async (req: Request, res: Response) => {
   const email = req.query.value;
-  // 쿼리 파라미터 유효성 검사
-  if (!email || typeof email !== "string") {
-    res.status(400).json({ message: "value 쿼리가 제공되어야합니다." });
-    return;
-  }
   try {
+    // 쿼리 파라미터 유효성 검사
+    if (!email || typeof email !== "string") {
+      throw new Error(errorCodeAnswer[ErrorCode.VALUE_REQUIRED].message);
+    }
     const isDuplicate = await handleCheckEmailDuplication(email);
     if (isDuplicate) {
       throw new Error(errorCodeAnswer[ErrorCode.EMAIL_DUPLICATED].message);
