@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { handlerError, requiredCheck } from "../utils/fuction";
-import { checkUser, checkUserStatus } from "../controllers/user.controller";
+import { checkUser, checkUserStatus, insertToken } from "../controllers/user.controller";
 import { userStatusErrorRequestAnswer } from "../utils/userStatusType";
+import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
+import tokenType from "../utils/tokenType";
 
 /**
  * 일반 로그인
@@ -58,24 +60,27 @@ export const loginUser = async (req: Request, res: Response) => {
       aud: process.env.BASE_URL,
     };
     const accessToken = jwt.sign(accessTokenPayload, process.env.JWT_ACCESS_SECRET_KEY, { expiresIn: "15m" });
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 15분
-    });
+    const refreshTokenJWTID = randomUUID();
     const refreshTokenPayload = {
       iss: process.env.BASE_URL + "/auth/login",
       sub: body.id,
       aud: process.env.BASE_URL + "/auth/refresh",
+      jwtid: refreshTokenJWTID,
     };
     const refreshToken = jwt.sign(refreshTokenPayload, process.env.JWT_REFRESH_SECRET_KEY, { expiresIn: "7d" });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: "strict",
-      path: "/auth/refresh", // /refresh 경로에서만 쿠키 전송
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     });
-    res.json({ id: body.id, nickName: nickname });
+    await insertToken(
+      body.id,
+      tokenType.REFRESH_TOKEN,
+      refreshTokenJWTID,
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    );
+
+    res.json({ id: body.id, nickname: nickname, accessToken: accessToken });
   } catch (error) {
     handlerError(error, res);
   }
