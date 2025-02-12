@@ -54,6 +54,21 @@ export const deleteToken = async (id: string, tokenType: tokenType, tokenValue: 
 };
 
 /**
+ * 회원의 모든 토큰 삭제
+ *
+ * @async
+ * @throw
+ * @param {string} id - 토큰을 삭제할 사용자 id
+ */
+export const deleteUserToken = async (id: string): Promise<void> => {
+  const [result] = await pool.execute<ResultSetHeader>("DELETE FROM token_table WHERE user_id = ?", [id]);
+  if (result.affectedRows === 0) {
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
+  }
+  console.log("사용자의 모든 토큰 삭제 완료", result);
+};
+
+/**
  * 이메일 인증 토큰 검사
  *
  * @async
