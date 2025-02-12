@@ -82,7 +82,13 @@ export const loginUser = async (req: Request, res: Response) => {
       //deleteToken함수는 행을 변경하지 않으면 에러를 던지지만 이전에 발행된 리프래시 토큰이 존재하지 않을 수 있을수 있으므로 예외처리
       await deleteToken(body.id, tokenType.REFRESH_TOKEN, refreshTokenJWTID);
     } catch (error) {
-      console.log("이전에 발행된 리프래시 토큰이 존재하지 않습니다");
+      if (error instanceof Error) {
+        if (error.message === errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message) {
+          console.log("이전에 발행된 리프래시 토큰이 존재하지 않습니다");
+        } else {
+          throw error;
+        }
+      }
     }
     await insertToken(
       body.id,

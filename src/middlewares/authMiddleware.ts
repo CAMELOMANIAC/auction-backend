@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import ErrorCode from "../utils/errorCode";
 
 export type UserAuthRequest = Request & {
-  user: string;
+  user?: string;
 };
 
 /**

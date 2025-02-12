@@ -7,7 +7,7 @@ const corsMiddleware = (req: Request, res: Response, next: NextFunction): void =
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Max-Age", "86400");
   if (req.method === "OPTIONS") {
-    res.sendStatus(200);
+    res.sendStatus(204);
   } else {
     next();
   }

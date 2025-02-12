@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { deleteUserStatus, insertUser, insertUserStatus } from "../controllers/user.controller";
+import { deleteUserStatusByIdAndStatus, insertUser, insertUserStatus } from "../controllers/user.controller";
 import { handlerError, requiredCheck } from "../utils/fuction";
 import { sendMail } from "../utils/nodemailer";
 import { randomUUID } from "crypto";
@@ -93,8 +93,8 @@ export const verifyEmail = async (req: Request, res: Response) => {
     }
     const userId = await checkEmailToken(randomCode);
     await deleteToken(userId, tokenType.EMAIL_VERIFICATION_TOKEN, randomCode);
-    await deleteUserStatus(userId, userStatus.EMAIL_VERIFY_REQUIRED);
-    res.sendStatus(200);
+    await deleteUserStatusByIdAndStatus(userId, userStatus.EMAIL_VERIFY_REQUIRED);
+    res.sendStatus(204);
   } catch (error) {
     handlerError(error, res);
   }

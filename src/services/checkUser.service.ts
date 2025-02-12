@@ -21,7 +21,7 @@ export const checkIdDuplication = async (req: Request, res: Response) => {
     if (isDuplicate) {
       throw new Error(errorCodeAnswer[ErrorCode.ID_DUPLICATED].message);
     }
-    res.sendStatus(200);
+    res.sendStatus(204);
   } catch (error) {
     handlerError(error, res);
   }
@@ -41,7 +41,7 @@ export const checkNameDuplication = async (req: Request, res: Response) => {
     if (isDuplicate) {
       throw new Error(errorCodeAnswer[ErrorCode.NICKNAME_DUPLICATED].message);
     }
-    res.sendStatus(200);
+    res.sendStatus(204);
   } catch (error) {
     handlerError(error, res);
   }
@@ -61,7 +61,7 @@ export const checkEmailDuplication = async (req: Request, res: Response) => {
     if (isDuplicate) {
       throw new Error(errorCodeAnswer[ErrorCode.EMAIL_DUPLICATED].message);
     }
-    res.sendStatus(200);
+    res.sendStatus(204);
   } catch (error) {
     handlerError(error, res);
   }
