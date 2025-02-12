@@ -43,9 +43,7 @@ export const refleshAccessToken = async (req: Request, res: Response) => {
     }
     await checkRefleshToken(decodedToken.sub);
     const accessTokenPayload = {
-      iss: process.env.BASE_URL + "/auth/refresh",
       sub: decodedToken?.sub,
-      aud: process.env.BASE_URL,
     };
     if (!process.env.JWT_ACCESS_SECRET_KEY) {
       throw new Error(errorCodeAnswer[ErrorCode.INVALID_ENVIRONMENT_VARIABLE].message);

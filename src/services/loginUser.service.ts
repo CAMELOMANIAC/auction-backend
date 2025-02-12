@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 import tokenType from "../utils/tokenType";
 import { deleteToken, insertToken } from "../controllers/token.controller";
+import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
 
 /**
  * 일반 로그인
@@ -53,36 +54,36 @@ export const loginUser = async (req: Request, res: Response) => {
       return;
     }
     if (!process.env.JWT_ACCESS_SECRET_KEY || !process.env.JWT_REFRESH_SECRET_KEY) {
-      res.status(500).json({ message: "서버 JWT 키를 찾을 수 없습니다" });
-      return;
+      throw new Error(errorCodeAnswer[ErrorCode.INVALID_ENVIRONMENT_VARIABLE].message);
     }
     const accessTokenPayload = {
-      iss: process.env.BASE_URL + "/auth/login",
       sub: body.id,
-      aud: process.env.BASE_URL,
     };
     const accessToken = jwt.sign(accessTokenPayload, process.env.JWT_ACCESS_SECRET_KEY, {
       expiresIn: "15m",
-      audience: `${process.env.BASE_URL}`,
-      issuer: `${process.env.BASE_URL}/auth/login`,
+      audience: process.env.BASE_URL,
+      issuer: process.env.BASE_URL + "/auth/login",
     });
     const refreshTokenJWTID = randomUUID();
     const refreshTokenPayload = {
-      iss: process.env.BASE_URL + "/auth/login",
       sub: body.id,
-      aud: process.env.BASE_URL + "/auth/refresh",
       jwtid: refreshTokenJWTID,
     };
     const refreshToken = jwt.sign(refreshTokenPayload, process.env.JWT_REFRESH_SECRET_KEY, {
       expiresIn: "7d",
-      audience: `${process.env.BASE_URL}/auth/refresh`,
-      issuer: `${process.env.BASE_URL}/auth/login`,
+      audience: process.env.BASE_URL + "/auth/refresh",
+      issuer: process.env.BASE_URL + "/auth/login",
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       sameSite: "lax",
     });
-    await deleteToken(body.id, tokenType.REFRESH_TOKEN, refreshTokenJWTID);
+    try {
+      //deleteToken함수는 행을 변경하지 않으면 에러를 던지지만 이전에 발행된 리프래시 토큰이 존재하지 않을 수 있을수 있으므로 예외처리
+      await deleteToken(body.id, tokenType.REFRESH_TOKEN, refreshTokenJWTID);
+    } catch (error) {
+      console.log("이전에 발행된 리프래시 토큰이 존재하지 않습니다");
+    }
     await insertToken(
       body.id,
       tokenType.REFRESH_TOKEN,
