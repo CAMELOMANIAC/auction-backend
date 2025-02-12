@@ -11,17 +11,21 @@ enum ErrorCode {
 
   //액세스 토큰 오류
   ACCESS_TOKEN_EXPIRED,
+  INVAILD_ACCESS_TOKEN,
 
   //리프레시 토큰 오류
   INVAILD_REFRESH_TOKEN,
   REFRESH_TOKEN_REQUIRED,
 
-  //회원가입 정보 오류
+  //회원가입 오류
   ID_DUPLICATED,
   EMAIL_DUPLICATED,
   NICKNAME_DUPLICATED,
   VALUE_REQUIRED,
   CODE_REQUIRED,
+
+  //회원탈퇴 오류
+  FAILD_TO_DELETE_USER,
 }
 
 export default ErrorCode;
@@ -35,6 +39,7 @@ export const errorCodeAnswer: { [key: number]: { status: number; message: string
   [ErrorCode.USER_NOT_FOUND]: { status: 404, message: "일치하는 사용자가 없습니다" },
 
   [ErrorCode.ACCESS_TOKEN_EXPIRED]: { status: 401, message: "토큰이 만료되었습니다 재발급 요청을 시작해주세요" },
+  [ErrorCode.INVAILD_ACCESS_TOKEN]: { status: 401, message: "유효하지 않은 액세스 토큰입니다." },
 
   [ErrorCode.INVAILD_REFRESH_TOKEN]: {
     status: 401,
@@ -47,4 +52,6 @@ export const errorCodeAnswer: { [key: number]: { status: number; message: string
   [ErrorCode.NICKNAME_DUPLICATED]: { status: 400, message: "이 닉네임은 다른 사용자가 이용중입니다" },
   [ErrorCode.VALUE_REQUIRED]: { status: 404, message: "value값을 제출해야 합니다" },
   [ErrorCode.CODE_REQUIRED]: { status: 404, message: "code값을 제출해야 합니다" },
+
+  [ErrorCode.FAILD_TO_DELETE_USER]: { status: 500, message: "삭제를 진행하지 못했습니다. 잠시후 다시 시도해주세요" },
 };
