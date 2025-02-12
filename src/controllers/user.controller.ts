@@ -32,11 +32,26 @@ export const insertUser = async (
 };
 
 /**
+ * 회원 아이디 삭제
+ *
+ * @async
+ * @throws
+ * @param {string} id - 삭제할 유저의 id
+ */
+export const deleteUserId = async (id: string): Promise<void> => {
+  const [result] = await pool.execute<ResultSetHeader>("DELETE FROM user_table WHERE user_id = ?", [id]);
+  if (result.affectedRows === 0) {
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
+  }
+  console.log("유저 삭제 완료", result);
+};
+
+/**
  * 회원상태 확인
  *
  * @param id
  * @param userStatus
- * @returns
+ * @returns {Promise<string[]> | void}
  */
 export const checkUserStatus = async (id: string, userStatus?: userStatus): Promise<string[] | void> => {
   const query = "SELECT status FROM user_statuses_table WHERE user_id = ?" + (userStatus ? " AND status = ?" : "");
@@ -74,7 +89,7 @@ export const insertUserStatus = async (id: string, userStatus: userStatus): Prom
 };
 
 /**
- * 회원상태 삭제
+ * 회원의 특정 상태 삭제
  *
  * @async
  * @throw
@@ -82,7 +97,7 @@ export const insertUserStatus = async (id: string, userStatus: userStatus): Prom
  * @param {userStatus} userStatus
  * @returns {Promise<QueryResult>}
  */
-export const deleteUserStatus = async (id: string, userStatus: userStatus): Promise<QueryResult> => {
+export const deleteUserStatusByIdAndStatus = async (id: string, userStatus: userStatus): Promise<QueryResult> => {
   const [result] = await pool.execute<ResultSetHeader>(
     "DELETE FROM user_statuses_table WHERE user_id = ? AND status = ?",
     [id, userStatus]
@@ -90,8 +105,23 @@ export const deleteUserStatus = async (id: string, userStatus: userStatus): Prom
   if (result.affectedRows === 0) {
     throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
   }
-  console.log("유저 상태 삭제 완료", result);
+  console.log(id, userStatus, "유저 상태 삭제 완료", result);
   return result;
+};
+
+/**
+ * 회원의 모든 상태 삭제
+ *
+ * @async
+ * @throws
+ * @param {string} id - 삭제할 유저의 id
+ */
+export const deleteUserStatus = async (id: string): Promise<void> => {
+  const [result] = await pool.execute<ResultSetHeader>("DELETE FROM user_statuses_table WHERE user_id = ?", [id]);
+  if (result.affectedRows === 0) {
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
+  }
+  console.log("유저 상태 삭제 완료", result);
 };
 
 /**
