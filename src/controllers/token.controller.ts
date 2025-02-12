@@ -90,3 +90,18 @@ export const checkRefleshToken = async (userId: string): Promise<void> => {
   }
   console.log("리프레시 토큰 체크 성공", rows);
 };
+
+/**
+ * 만료된 액세스 토큰을 삭제
+ * cron job용 함수
+ *
+ * @async
+ */
+export const deleteExpiredTokens = async () => {
+  try {
+    const [result] = await pool.execute<ResultSetHeader>("DELETE FROM token_table WHERE expires_at <= NOW()");
+    console.log("만료된 토큰을 제거했습니다:", result);
+  } catch (err) {
+    console.error("토큰을 제거하는 도중 오류가 발생했습니다:", err);
+  }
+};
