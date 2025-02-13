@@ -107,6 +107,26 @@ export const checkRefleshToken = async (userId: string): Promise<void> => {
 };
 
 /**
+ * 토큰의 실제 값을 반환
+ *
+ * @async
+ * @throw
+ * @param {string} userId - 토큰을 반환할 유저의 id
+ * @param {tokenType} tokenType - 토큰의 타입
+ * @returns {Promise<string>} - 토큰의 실제 값, 실패시 에러
+ */
+export const getTokenValue = async (userId: string, tokenType: tokenType): Promise<string> => {
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    "SELECT token_value FROM token_table WHERE user_id = ? AND token_type = ? AND expires_at > NOW()",
+    [userId, tokenType]
+  );
+  if (rows.length === 0) {
+    throw new Error(errorCodeAnswer[ErrorCode.INVAILD_REFRESH_TOKEN].message);
+  }
+  return rows.map((row) => row.token_value)[0];
+};
+
+/**
  * 만료된 액세스 토큰을 삭제
  * cron job용 함수
  *
