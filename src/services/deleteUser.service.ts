@@ -27,7 +27,7 @@ import {
  * @param UserAuthRequest
  * @param res
  */
-const deleteUser = async (req: UserAuthRequest, res: Response) => {
+const deleteAccount = async (req: UserAuthRequest, res: Response) => {
   const id = req.user;
 
   //사용자 인증 토큰 제거
@@ -124,4 +124,4 @@ const deleteUser = async (req: UserAuthRequest, res: Response) => {
   }
 };
 
-export default deleteUser;
+export default deleteAccount;

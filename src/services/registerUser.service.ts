@@ -18,7 +18,7 @@ import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
  * @param req
  * @param res
  */
-const registerUser = async (req: Request, res: Response) => {
+const registerAccount = async (req: Request, res: Response) => {
   const body = req.body;
 
   // 쿼리 파라미터 유효성 검사
@@ -71,7 +71,7 @@ const registerUser = async (req: Request, res: Response) => {
   }
 };
 
-export default registerUser;
+export default registerAccount;
 
 /**
  * 이메일 인증
