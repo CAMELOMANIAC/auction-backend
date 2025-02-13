@@ -2,7 +2,9 @@ import { Request, Response } from "express";
 import { handlerError } from "../utils/fuction";
 import jwt from "jsonwebtoken";
 import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
-import { checkRefleshToken } from "../controllers/token.controller";
+import { checkRefleshToken, deleteToken, getTokenValue } from "../controllers/token.controller";
+import { UserAuthRequest } from "../middlewares/authMiddleware";
+import tokenType from "../utils/tokenType";
 
 /**
  * 리프레시 토큰을 이용한 액세스 재발급
@@ -54,6 +56,30 @@ export const refleshAccessToken = async (req: Request, res: Response) => {
       issuer: `${process.env.BASE_URL}/auth/refresh`,
     });
     res.status(200).json({ accessToken });
+  } catch (error) {
+    handlerError(error, res);
+  }
+};
+
+/**
+ * 액세스토큰을 이용한 로그아웃
+ * 1. db에 저장된 refreshToken값을 가져오기(getTokenValue)
+ * 2. db에서 로그아웃 사용자 refreshToken 제거(deleteToken)
+ * 3. 클라이언트에게 쿠키제거 요청헤더 추가
+ *
+ * @param {UserAuthRequest} req - 인증된 사용자 id가 포함된 커스텀 Request객체
+ * @param {Response} res - 일반적인 Response객체
+ */
+export const logout = async (req: UserAuthRequest, res: Response) => {
+  const userId = req.user;
+  try {
+    if (!userId) {
+      throw new Error(errorCodeAnswer[ErrorCode.INVAILD_ACCESS_TOKEN].message);
+    }
+    const refreshTokenValue = await getTokenValue(userId, tokenType.REFRESH_TOKEN);
+    await deleteToken(userId, tokenType.REFRESH_TOKEN, refreshTokenValue);
+    res.clearCookie("refreshToken");
+    res.sendStatus(204);
   } catch (error) {
     handlerError(error, res);
   }
