@@ -70,8 +70,8 @@ export const handlerError = (error: any, res: Response) => {
     );
 
     if (matchingError) {
-      const [, errorInfo] = matchingError;
-      res.status(errorInfo.status).json({ message: errorInfo.message });
+      const [errorCode, errorInfo] = matchingError;
+      res.status(errorInfo.status).json({ message: errorInfo.message, error: errorCode });
     } else {
       res.status(500).json({ message: "에러가 발생했습니다.", error: error.message });
     }
