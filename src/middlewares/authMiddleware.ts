@@ -28,12 +28,12 @@ const authMiddleware = (req: UserAuthRequest, res: Response, next: NextFunction)
     if (typeof decoded === "string" || !decoded.sub) {
       throw new Error(errorCodeAnswer[ErrorCode.INVAILD_ACCESS_TOKEN].message);
     }
-    if (decoded.exp && decoded.exp < Date.now() / 1000) {
-      throw new Error(errorCodeAnswer[ErrorCode.ACCESS_TOKEN_EXPIRED].message);
-    }
     req.user = decoded.sub;
     next();
   } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      error.message = errorCodeAnswer[ErrorCode.ACCESS_TOKEN_EXPIRED].message;
+    }
     handlerError(error, res);
   }
 };
