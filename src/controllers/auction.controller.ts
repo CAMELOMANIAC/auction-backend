@@ -10,7 +10,7 @@ import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
  * @returns {Promise<number[]>} - 사용자가 작성한 경매글의 auction_id 목록
  */
 export const getUserAuctionIds = async (id: string): Promise<number[]> => {
-  const [result] = await pool.execute<RowDataPacket[]>("SELECT auction_id FROM auction_table WHERE user_id = ?", [id]);
+  const [result] = await pool.execute<RowDataPacket[]>("SELECT auction_id FROM auction_table WHERE writer = ?", [id]);
   console.log("사용자가 작성한 경매글 검색 완료", result);
   return result.map((row) => row.auction_id);
 };
@@ -105,18 +105,18 @@ export const deleteUserViewer = async (id: string): Promise<void> => {
 };
 
 /**
- * action_id에 해당하는 이미지 제거
+ * auction_id에 해당하는 이미지 제거
  *
  * @async
  * @throws
- * @param {number} actionId - 이미지의 action_id
+ * @param {number} auctionId - 이미지의 auction_id
  */
-export const deleteImageByActionId = async (actionId: number): Promise<void> => {
-  const [result] = await pool.execute<ResultSetHeader>("DELETE FROM image_table WHERE action_id = ?", [actionId]);
+export const deleteImageByAuctionId = async (auctionId: number): Promise<void> => {
+  const [result] = await pool.execute<ResultSetHeader>("DELETE FROM image_table WHERE auction_id = ?", [auctionId]);
   if (result.affectedRows === 0) {
     throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
   }
-  console.log(actionId, "이미지 제거 완료", result);
+  console.log(auctionId, "이미지 제거 완료", result);
 };
 
 /**
