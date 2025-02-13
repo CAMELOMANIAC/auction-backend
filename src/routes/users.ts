@@ -10,6 +10,6 @@ router.get("/check-duplication/id", checkIdDuplication);
 router.get("/check-duplication/nickname", checkNameDuplication);
 router.get("/check-duplication/email", checkEmailDuplication);
 
-router.delete("/user", authMiddleware, deleteUser);
+router.delete("/", authMiddleware, deleteUser);
 
 export default router;
