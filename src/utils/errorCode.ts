@@ -27,6 +27,10 @@ enum ErrorCode {
 
   //회원탈퇴 오류
   FAILD_TO_DELETE_USER = "FAILD_TO_DELETE_USER",
+
+  //경매글 작성오류
+  MAIN_IMAGE_REQUIRED = "MAIN_IMAGE_REQUIRED",
+  IMAGE_NOT_UPLOADED = "NOT_UPLOADED_MAIN_IMAGE",
 }
 
 export default ErrorCode;
@@ -56,4 +60,10 @@ export const errorCodeAnswer: { [key: string]: { status: number; message: string
   [ErrorCode.CODE_REQUIRED]: { status: 404, message: "code값을 제출해야 합니다" },
 
   [ErrorCode.FAILD_TO_DELETE_USER]: { status: 500, message: "삭제를 진행하지 못했습니다. 잠시후 다시 시도해주세요" },
+
+  [ErrorCode.MAIN_IMAGE_REQUIRED]: { status: 404, message: "상품 메인 이미지를 제출해야 합니다" },
+  [ErrorCode.IMAGE_NOT_UPLOADED]: {
+    status: 400,
+    message: "상품 이미지를 업로드 할 수 없습니다 이미지를 다시 확인해주세요",
+  },
 };
