@@ -9,8 +9,10 @@ import {
   deleteUserAuction,
   deleteUserBid,
   deleteUserViewer,
+  getImageDeleteUrl,
   getUserAuctionIds,
 } from "../controllers/auction.controller";
+import { fetchImageDelete } from "../utils/fetchImage";
 
 /**
  * 회원 탈퇴
@@ -19,10 +21,12 @@ import {
  * 3.viewer_table 행 제거(deleteUserViewer)
  * 4.bid_table 행 제거(deleteUserBid)
  * 5.작성한 경매 글 검색(getUserAuctionIds)
- * 6.작성한 경매 글에 포함된 image_table 행 제거(deleteImageByAuctionId)
- * 7.auction_table 행 제거(deleteUserAuction)
- * 8.user_table 행 제거(deleteUserId)
- * 9.리프래시 토큰 제거 응답
+ * 6.경매글에 포함된 이미지 삭제 검색(getImageDeleteUrl)
+ * 7.img-bb에 저장된 이미제 저거(fetchImageDelete)
+ * 8.작성한 경매 글에 포함된 image_table 행 제거(deleteImageByAuctionId)
+ * 9.auction_table 행 제거(deleteUserAuction)
+ * 10.user_table 행 제거(deleteUserId)
+ * 11.리프래시 토큰 제거 응답
  *
  * @param UserAuthRequest
  * @param res
@@ -80,17 +84,25 @@ const deleteAccount = async (req: UserAuthRequest, res: Response) => {
 
     // 경매글 이미지 제거
     const auctionIdArray = await getUserAuctionIds(id);
-    for (const auctionId of auctionIdArray) {
-      try {
-        await deleteImageByAuctionId(auctionId);
-      } catch (error) {
-        if (error instanceof Error && error.message === errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message) {
-          console.log("삭제할 경매 사진이 없습니다.");
-        } else {
-          throw error;
+    await Promise.all(
+      auctionIdArray.map(async (auctionId) => {
+        try {
+          const imageDeleteUrlArray = await getImageDeleteUrl(auctionId);
+          await Promise.all(
+            imageDeleteUrlArray.map(async (image) => {
+              await fetchImageDelete(image);
+            })
+          );
+          await deleteImageByAuctionId(auctionId);
+        } catch (error) {
+          if (error instanceof Error && error.message === errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message) {
+            console.log("삭제할 경매 사진이 없습니다.");
+          } else {
+            throw error;
+          }
         }
-      }
-    }
+      })
+    );
 
     // 경매 글 제거
     try {
