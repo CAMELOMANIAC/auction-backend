@@ -116,7 +116,7 @@ export const deleteImageByAuctionId = async (auctionId: number): Promise<void> =
   if (result.affectedRows === 0) {
     throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
   }
-  console.log(auctionId, "이미지 제거 완료", result);
+  console.log(auctionId, "이미지 제거 완료", result.insertId);
 };
 
 /**
@@ -132,4 +132,74 @@ export const deleteImageByImageUrl = async (imageUrl: string): Promise<void> => 
     throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
   }
   console.log(imageUrl, "이미지 제거 완료", result);
+};
+
+type insertAuctionArg = {
+  writer: string;
+  itemName: string;
+  itemDescription: string;
+  expriesAt: Date;
+  startPrice: number;
+  bidStep: number;
+};
+/**
+ * 경매글 삽입
+ *
+ * @async
+ * @throws
+ * @param {insertAuctionArg} arg - 경매글 생성에 필요한 정보
+ */
+export const insertAuction = async ({
+  writer,
+  itemName,
+  itemDescription,
+  expriesAt,
+  startPrice,
+  bidStep,
+}: insertAuctionArg): Promise<number> => {
+  const [result] = await pool.execute<ResultSetHeader>(
+    "INSERT INTO auction_table (writer, item_name, item_description, created_at, expires_at, start_price, bid_step) VALUES (?,?,?,?,?,?,?)",
+    [writer, itemName, itemDescription, new Date(), expriesAt, startPrice, bidStep]
+  );
+  if (result.affectedRows === 0) {
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
+  }
+  console.log("경매글 삽입 완료", result.insertId);
+  return result.insertId;
+};
+
+/**
+ * 경매글의 이미지를 삽입
+ * 실제 이미지는 IMAGE_BB에 저장하고 그 url만 저장
+ *
+ * @async
+ * @throws
+ * @param {number} auctionId - 삽입할 이미지의 경매글 auction_id
+ * @param {string} imageUrl - 삽입할 이미지의 URL
+ * @param {string} deleteUrl - 이미지 제거시 요청할 URL
+ */
+export const insertImageUrl = async (auctionId: number, imageUrl: string, deleteUrl: string): Promise<void> => {
+  const [result] = await pool.execute<ResultSetHeader>(
+    "INSERT INTO image_table (image_url, auction_id, delete_url) VALUES (?,?,?)",
+    [imageUrl, auctionId, deleteUrl]
+  );
+  if (result.affectedRows === 0) {
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
+  }
+  console.log("이미지 삽입 완료", result);
+};
+
+/**
+ * 경매상품의 이미지를 삭제할 수 있는 url을 반환
+ *
+ * @async
+ * @param {number} auctionId - 이미지의 경매글 auction_id
+ * @returns {Promise<string[]>} - 경매상품 이미지 삭제 url 목록
+ */
+export const getImageDeleteUrl = async (auctionId: number): Promise<string[]> => {
+  const [result] = await pool.execute<RowDataPacket[]>("SELECT delete_url FROM image_table WHERE auction_id = ?", [
+    auctionId,
+  ]);
+  console.log("경매상품 이미지 삭제 url 검색 완료", result);
+  return result.map((row) => row.delete_url);
 };
