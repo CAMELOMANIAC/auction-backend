@@ -3,7 +3,7 @@ import { errorCodeAnswer } from "./errorCode";
 
 type requiredFields = {
   name: string;
-  type: string;
+  type: number | string; //응답객체로 받으면 어차피 2가지만 가능하므로
   minLength: number;
   maxLength: number;
   pattern?: RegExp;
@@ -30,11 +30,17 @@ export const requiredCheck = (
         if (field.type === "string" && typeof value !== "string") {
           return { error: `${field.name}값은 문자열이어야 합니다.` };
         }
+        if (field.type === "number" && typeof value !== "number") {
+          return { error: `${field.name}값은 숫자여야 합니다.` };
+        }
         if (field.minLength && value.length < field.minLength) {
           return { error: `${field.name}값은 최소 ${field.minLength}글자 이상이어야 합니다.` };
         }
         if (field.maxLength && value.length > field.maxLength) {
           return { error: `${field.name}값은 최대 ${field.maxLength}글자 이하이어야 합니다.` };
+        }
+        if (field.pattern && field.pattern.test(value)) {
+          return { error: `${field.name}값이 유효한 형태가 아닙니다` };
         }
       }
     } else {
@@ -45,11 +51,17 @@ export const requiredCheck = (
       if (field.type === "string" && typeof data[field.name] !== "string") {
         return { error: `${field.name}값은 문자열이어야 합니다.` };
       }
+      if (field.type === "number" && typeof data[field.name] !== "number") {
+        return { error: `${field.name}값은 숫자여야 합니다.` };
+      }
       if (field.minLength && data[field.name].length < field.minLength) {
         return { error: `${field.name}값은 최소 ${field.minLength}글자 이상이어야 합니다.` };
       }
       if (field.maxLength && data[field.name].length > field.maxLength) {
         return { error: `${field.name}값은 최대 ${field.maxLength}글자 이하이어야 합니다.` };
+      }
+      if (field.pattern && field.pattern.test(data[field.name])) {
+        return { error: `${field.name}값이 유효한 형태가 아닙니다` };
       }
     }
   }
