@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { errorCodeAnswer } from "./errorCode";
+import fs from "fs";
 
 type requiredFields = {
   name: string;
@@ -39,7 +40,7 @@ export const requiredCheck = (
         if (field.maxLength && value.length > field.maxLength) {
           return { error: `${field.name}값은 최대 ${field.maxLength}글자 이하이어야 합니다.` };
         }
-        if (field.pattern && field.pattern.test(value)) {
+        if (field.pattern && !field.pattern.test(value)) {
           return { error: `${field.name}값이 유효한 형태가 아닙니다` };
         }
       }
@@ -60,7 +61,7 @@ export const requiredCheck = (
       if (field.maxLength && data[field.name].length > field.maxLength) {
         return { error: `${field.name}값은 최대 ${field.maxLength}글자 이하이어야 합니다.` };
       }
-      if (field.pattern && field.pattern.test(data[field.name])) {
+      if (field.pattern && !field.pattern.test(data[field.name])) {
         return { error: `${field.name}값이 유효한 형태가 아닙니다` };
       }
     }
@@ -90,4 +91,19 @@ export const handlerError = (error: any, res: Response) => {
   } else {
     res.status(500).json({ message: "알수없는 오류 발생했습니다.", error });
   }
+};
+
+/**
+ * 파일 삭제
+ *
+ * @param {string} filePath - 삭제할 파일의 경로
+ */
+export const deleteFile = (filePath: string) => {
+  fs.unlink(filePath, (error) => {
+    if (error) {
+      console.error("파일 삭제 중 오류 발생:", error);
+    } else {
+      console.log("파일 삭제 성공:", filePath);
+    }
+  });
 };
