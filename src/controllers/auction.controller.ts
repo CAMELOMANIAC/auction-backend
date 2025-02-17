@@ -10,9 +10,9 @@ import ErrorCode, { errorCodeAnswer } from "../utils/errorCode";
  * @returns {Promise<number[]>} - 사용자가 작성한 경매글의 auction_id 목록
  */
 export const getUserAuctionIds = async (id: string): Promise<number[]> => {
-  const [result] = await pool.execute<RowDataPacket[]>("SELECT auction_id FROM auction_table WHERE writer = ?", [id]);
-  console.log("사용자가 작성한 경매글 검색 완료", result);
-  return result.map((row) => row.auction_id);
+  const [row] = await pool.execute<RowDataPacket[]>("SELECT auction_id FROM auction_table WHERE writer = ?", [id]);
+  console.log("사용자가 작성한 경매글 검색 완료", row);
+  return row.map((row) => row.auction_id);
 };
 
 /**
@@ -23,9 +23,9 @@ export const getUserAuctionIds = async (id: string): Promise<number[]> => {
  * @returns {Promise<number[]>} - 사용자가 작성한 글의 bid_ind
  */
 export const getUserBidInds = async (id: string): Promise<number[]> => {
-  const [result] = await pool.execute<RowDataPacket[]>("SELECT bid_ind FROM bid_table WHERE bidder = ?", [id]);
-  console.log("사용자가 작성한 글 검색 완료", result);
-  return result.map((row) => row.bid_ind);
+  const [row] = await pool.execute<RowDataPacket[]>("SELECT bid_ind FROM bid_table WHERE bidder = ?", [id]);
+  console.log("사용자가 작성한 글 검색 완료", row);
+  return row.map((row) => row.bid_ind);
 };
 
 /**
@@ -197,9 +197,160 @@ export const insertImageUrl = async (auctionId: number, imageUrl: string, delete
  * @returns {Promise<string[]>} - 경매상품 이미지 삭제 url 목록
  */
 export const getImageDeleteUrl = async (auctionId: number): Promise<string[]> => {
-  const [result] = await pool.execute<RowDataPacket[]>("SELECT delete_url FROM image_table WHERE auction_id = ?", [
+  const [row] = await pool.execute<RowDataPacket[]>("SELECT delete_url FROM image_table WHERE auction_id = ?", [
     auctionId,
   ]);
-  console.log("경매상품 이미지 삭제 url 검색 완료", result);
-  return result.map((row) => row.delete_url);
+  console.log("경매상품 이미지 삭제 url 검색 완료", row);
+  return row.map((row) => row.delete_url);
+};
+
+/**
+ * 경매글 목록을 검색
+ *
+ * @async
+ * @throws
+ * @param {number} [pageCursor=0] - 페이지 커서 (0부터 시작)
+ * @param {string} [orderBy="created_at"] 정렬할 컬럼
+ * @param {"ASC" | "DESC"} [order="DESC"] - 정렬순서
+ * @param {number} [limit=10] - 한 페이지당 보여질 행의 수
+ * @returns {Promise<number[]>} - 경매글의 auction_id 목록
+ */
+export const selectAuctionList = async (
+  pageCursor: number = 0,
+  orderBy: string | undefined = "created_at",
+  order: string | undefined = "DESC",
+  limit: number | undefined = 10
+): Promise<RowDataPacket[]> => {
+  const allowedColumns = ["created_at", "expires_at", "price", "viewer_count", "bid_count", undefined];
+  if (!allowedColumns.includes(orderBy)) {
+    throw new Error(errorCodeAnswer[ErrorCode.NOT_ALLOWED_ORDER_BY].message);
+  }
+  order = order === "ASC" ? "ASC" : "DESC";
+  const query = `
+  SELECT 
+      a.auction_id,
+      COALESCE(v.viewer_count, 0) AS viewer_count,
+      COALESCE(b.bid_count, 0) AS bid_count,
+      COALESCE(b.price, 0) AS price
+  FROM 
+      auction_table a
+  LEFT JOIN 
+      (SELECT auction_id, COUNT(*) AS viewer_count 
+       FROM viewer_table 
+       GROUP BY auction_id) v ON a.auction_id = v.auction_id
+  LEFT JOIN 
+      (SELECT auction_id, COUNT(*) AS bid_count, MAX(price) AS price 
+       FROM bid_table 
+       GROUP BY auction_id) b ON a.auction_id = b.auction_id
+  WHERE 
+      a.auction_id > ?
+  ORDER BY 
+      ${orderBy} ${order}
+  LIMIT ${limit}
+`;
+  const [row] = await pool.execute<RowDataPacket[]>(query, [pageCursor]);
+  console.log("경매글 목록 검색 완료", row);
+  return row;
+};
+
+type Auction = {
+  auctionId: number;
+  writer: string;
+  itemName: string;
+  itemDescription: string;
+  createdAt: Date;
+  expiresAt: Date;
+  startPrice: number;
+  bidStep: number;
+};
+/**
+ * 경매글 상세 정보를 검색
+ *
+ * @async
+ * @param {number} auctionId - 경매글 id
+ * @returns {Promise<Auction>} - 경매글 상세 정보
+ */
+export const selectAuctionDetail = async (auctionId: number): Promise<Auction> => {
+  const [row] = await pool.execute<RowDataPacket[]>(
+    "SELECT auction_id, writer, item_name, item_description, created_at, expires_at, start_price, bid_step FROM auction_table WHERE auction_id = ?",
+    [auctionId]
+  );
+  console.log("경매글 상세 정보 검색 완료", row);
+  return row.map((row) => ({
+    auctionId: row.auction_id,
+    writer: row.writer,
+    itemName: row.item_name,
+    itemDescription: row.item_description,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at,
+    startPrice: row.start_price,
+    bidStep: row.bid_step,
+  }))[0];
+};
+
+/**
+ * 경매상품 이미지를 검색
+ *
+ * @async
+ * @param {number} auctionId - 경매상품의 auction_id
+ * @returns {Promise<RowDataPacket[]>} - 경매상품 이미지 url 목록
+ */
+export const selectAuctionImage = async (auctionId: number): Promise<RowDataPacket[]> => {
+  const [row] = await pool.execute<RowDataPacket[]>("SELECT image_url FROM image_table WHERE auction_id = ?", [
+    auctionId,
+  ]);
+  console.log("경매상품 이미지 검색 완료", row);
+  return row;
+};
+
+/**
+ * 경매상품의 모든 입찰 내역을 검색
+ *
+ * @async
+ * @param {number} auctionId - 경매상품의 auction_id
+ * @returns {Promise<RowDataPacket[]>} - 경매상품의 모든 입찰 내역
+ */
+export const selectBid = async (auctionId: number): Promise<RowDataPacket[]> => {
+  const [row] = await pool.execute<RowDataPacket[]>(
+    "SELECT bidder, price, created_at FROM bid_table WHERE auction_id = ?",
+    [auctionId]
+  );
+  console.log("경매상품 글 검색 완료", row);
+  return row;
+};
+
+/**
+ * 경매상품에 새로운 입찰을 추가
+ *
+ * @async
+ * @throws
+ * @param {number} auctionId - 경매상품의 auction_id
+ * @param {string} bidder - 새로운 입찰자의 id
+ * @param {number} price - 새로운 입찰의 가격
+ */
+export const insertBid = async (auctionId: number, bidder: string, price: number): Promise<void> => {
+  const [result] = await pool.execute<ResultSetHeader>(
+    "INSERT INTO bid_table (auction_id, bidder, price, created_at) VALUES (?,?,?,NOW())",
+    [auctionId, bidder, price]
+  );
+  if (result.affectedRows === 0) {
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
+  }
+  console.log("경매상품 글 삽입 완료", result);
+};
+
+/**
+ * 경매상품의 조회수 검색
+ *
+ * @async
+ * @param {number} auctionId - 경매상품의 auction_id
+ * @returns {Promise<number>} - 경매상품의 조회수
+ */
+export const selectViewerCount = async (auctionId: number): Promise<number> => {
+  const [row] = await pool.execute<RowDataPacket[]>(
+    "SELECT COUNT(*) AS viewer_count FROM viewer_table WHERE auction_id = ?",
+    [auctionId]
+  );
+  console.log("경매상품 글 검색 완료", row);
+  return row[0].viewer_count;
 };
