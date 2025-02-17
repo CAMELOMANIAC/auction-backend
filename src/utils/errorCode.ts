@@ -31,6 +31,16 @@ enum ErrorCode {
   //경매글 작성오류
   MAIN_IMAGE_REQUIRED = "MAIN_IMAGE_REQUIRED",
   IMAGE_NOT_UPLOADED = "NOT_UPLOADED_MAIN_IMAGE",
+
+  //경매글 읽기 오류
+  NOT_ALLOWED_ORDER_BY = "NOT_ALLOWED_ORDER_BY",
+  AUCTION_ID_REQUIRED = "AUCTION_ID_REQUIRED",
+
+  //입찰 오류
+  AUCTION_DATE_EXPIRED = "AUCTION_DATE_EXPIRED",
+  HIGHER_BID_EXIST = "HIGHER_BID_EXIST",
+  BID_BELOW_STARTING_PRICE = "BID_BELOW_STARTING_PRICE",
+  BID_PRICE_REQUIRED = "BID_PRICE_REQUIRED",
 }
 
 export default ErrorCode;
@@ -47,10 +57,7 @@ export const errorCodeAnswer: { [key: string]: { status: number; message: string
   [ErrorCode.INVAILD_ACCESS_TOKEN]: { status: 401, message: "유효하지 않은 액세스 토큰입니다." },
   [ErrorCode.ACCESS_TOKEN_REQUIRED]: { status: 400, message: "액세스 토큰을 제출해야합니다" },
 
-  [ErrorCode.INVAILD_REFRESH_TOKEN]: {
-    status: 401,
-    message: "리프레시 토큰이 유효하지 않습니다",
-  },
+  [ErrorCode.INVAILD_REFRESH_TOKEN]: { status: 401, message: "리프레시 토큰이 유효하지 않습니다" },
   [ErrorCode.REFRESH_TOKEN_REQUIRED]: { status: 400, message: "리프레시 토큰을 제출해야합니다" },
 
   [ErrorCode.ID_DUPLICATED]: { status: 400, message: "이 아이디는 다른 사용자가 이용중입니다" },
@@ -66,4 +73,12 @@ export const errorCodeAnswer: { [key: string]: { status: number; message: string
     status: 400,
     message: "상품 이미지를 업로드 할 수 없습니다 이미지를 다시 확인해주세요",
   },
+
+  [ErrorCode.NOT_ALLOWED_ORDER_BY]: { status: 400, message: "허용되지 않은 orderBy값 입니다" },
+  [ErrorCode.AUCTION_ID_REQUIRED]: { status: 404, message: "경매글 아이디를 제출해야 합니다" },
+
+  [ErrorCode.AUCTION_DATE_EXPIRED]: { status: 400, message: "이미 종료된 경매입니다" },
+  [ErrorCode.HIGHER_BID_EXIST]: { status: 409, message: "이미 상회입찰자가 존재합니다" },
+  [ErrorCode.BID_BELOW_STARTING_PRICE]: { status: 400, message: "시작가보다 높은 금액을 입력해야합니다" },
+  [ErrorCode.BID_PRICE_REQUIRED]: { status: 400, message: "price값을 제출해야합니다" },
 };
