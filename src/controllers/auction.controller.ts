@@ -219,16 +219,27 @@ export const selectAuctionList = async (
   pageCursor: number = 0,
   orderBy: string | undefined = "created_at",
   order: string | undefined = "DESC",
-  limit: number | undefined = 10
+  limit: number | undefined = 10,
+  query?: string
 ): Promise<RowDataPacket[]> => {
   const allowedColumns = ["created_at", "expires_at", "price", "viewer_count", "bid_count", undefined];
   if (!allowedColumns.includes(orderBy)) {
     throw new Error(errorCodeAnswer[ErrorCode.NOT_ALLOWED_ORDER_BY].message);
   }
   order = order === "ASC" ? "ASC" : "DESC";
-  const query = `
+
+  let whereClause = "a.auction_id > ?";
+  const queryParams: Array<string | number> = [pageCursor];
+
+  if (query) {
+    whereClause += " AND a.item_name LIKE ?";
+    queryParams.push(`%${query}%`);
+  }
+
+  const sqlQuery = `
   SELECT 
       a.auction_id,
+      a.item_name,
       COALESCE(v.viewer_count, 0) AS viewer_count,
       COALESCE(b.bid_count, 0) AS bid_count,
       COALESCE(b.price, 0) AS price
@@ -243,14 +254,15 @@ export const selectAuctionList = async (
        FROM bid_table 
        GROUP BY auction_id) b ON a.auction_id = b.auction_id
   WHERE 
-      a.auction_id > ?
+      ${whereClause}
   ORDER BY 
       ${orderBy} ${order}
   LIMIT ${limit}
-`;
-  const [row] = await pool.execute<RowDataPacket[]>(query, [pageCursor]);
-  console.log("경매글 목록 검색 완료", row);
-  return row;
+  `;
+
+  const [rows] = await pool.execute<RowDataPacket[]>(sqlQuery, queryParams);
+  console.log("경매글 목록 검색 완료", rows);
+  return rows;
 };
 
 type Auction = {

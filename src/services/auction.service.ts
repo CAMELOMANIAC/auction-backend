@@ -135,13 +135,14 @@ export const registerAuction = async (req: registerAuctionReq, res: Response) =>
  * @param {Response} res - 일반적인 Response객체
  */
 export const getAuctionList = async (req: Request, res: Response) => {
-  const { pageCursor, orderBy, order, limit } = req.query;
+  const { pageCursor, orderBy, order, limit, query } = req.query;
   try {
     const auctionList = await selectAuctionList(
       typeof pageCursor === "string" ? Number(pageCursor) : undefined,
       typeof orderBy === "string" ? orderBy : undefined,
       typeof order === "string" ? order : undefined,
-      typeof limit === "string" ? Number(limit) : undefined
+      typeof limit === "string" ? Number(limit) : undefined,
+      typeof query === "string" ? query : undefined
     );
     res.json({ auctionList });
   } catch (error) {
