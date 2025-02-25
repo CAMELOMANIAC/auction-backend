@@ -222,7 +222,7 @@ export const selectAuctionList = async (
   limit: number | undefined = 10,
   query?: string
 ): Promise<RowDataPacket[]> => {
-  const allowedColumns = ["created_at", "expires_at", "price", "viewer_count", "bid_count", undefined];
+  const allowedColumns = ["created_at", "expires_at", "viewer_count", "bid_count", undefined];
   if (!allowedColumns.includes(orderBy)) {
     throw new Error(errorCodeAnswer[ErrorCode.NOT_ALLOWED_ORDER_BY].message);
   }
@@ -240,9 +240,12 @@ export const selectAuctionList = async (
   SELECT 
       a.auction_id,
       a.item_name,
+      a.item_description,
+      a.expires_at,
       COALESCE(v.viewer_count, 0) AS viewer_count,
       COALESCE(b.bid_count, 0) AS bid_count,
-      COALESCE(b.price, 0) AS price
+      COALESCE(b.price, 0) AS price,
+      i.image_url AS main_image_url
   FROM 
       auction_table a
   LEFT JOIN 
@@ -253,6 +256,8 @@ export const selectAuctionList = async (
       (SELECT auction_id, COUNT(*) AS bid_count, MAX(price) AS price 
        FROM bid_table 
        GROUP BY auction_id) b ON a.auction_id = b.auction_id
+  LEFT JOIN 
+      image_table i ON a.auction_id = i.auction_id
   WHERE 
       ${whereClause}
   ORDER BY 
