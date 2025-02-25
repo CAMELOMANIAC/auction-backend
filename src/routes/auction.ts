@@ -6,7 +6,7 @@ import {
   getAuctionList,
   getBidList,
   getViewerCount,
-  regiserBid,
+  registerBid,
   registerAuction,
 } from "../services/auction.service";
 import upload from "../middlewares/binaryParserMiddleware";
@@ -22,7 +22,7 @@ router.get("/", getAuctionList);
 router.get("/:auctionId/detail", getAuctionDetail);
 router.get("/:auctionId/image", getAuctionImage);
 router.get("/:auctionId/bid", getBidList);
-router.post("/:auctionId/bid", authMiddleware, regiserBid);
+router.post("/:auctionId/bid", authMiddleware, registerBid);
 router.get("/:auctionId/viewer-count", getViewerCount);
 
 export default router;

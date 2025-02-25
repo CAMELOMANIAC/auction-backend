@@ -144,7 +144,7 @@ export const getAuctionList = async (req: Request, res: Response) => {
       typeof limit === "string" ? Number(limit) : undefined,
       typeof query === "string" ? query : undefined
     );
-    res.json({ auctionList });
+    res.json(auctionList);
   } catch (error) {
     handlerError(error, res);
   }
@@ -163,7 +163,7 @@ export const getAuctionDetail = async (req: Request, res: Response) => {
       throw new Error(errorCodeAnswer[ErrorCode.AUCTION_ID_REQUIRED].message);
     }
     const auctionDetail = await selectAuctionDetail(auctionId);
-    res.json({ auctionDetail });
+    res.json(auctionDetail);
   } catch (error) {
     handlerError(error, res);
   }
@@ -181,7 +181,7 @@ export const getAuctionImage = async (req: Request, res: Response) => {
       throw new Error(errorCodeAnswer[ErrorCode.AUCTION_ID_REQUIRED].message);
     }
     const imageUrl = await selectAuctionImage(auctionId);
-    res.json({ imageUrl });
+    res.json(imageUrl);
   } catch (error) {
     handlerError(error, res);
   }
@@ -199,7 +199,7 @@ export const getBidList = async (req: Request, res: Response) => {
       throw new Error(errorCodeAnswer[ErrorCode.AUCTION_ID_REQUIRED].message);
     }
     const bid = await selectBid(auctionId);
-    res.json({ bid });
+    res.json(bid);
   } catch (error) {
     handlerError(error, res);
   }
@@ -215,7 +215,7 @@ export const getBidList = async (req: Request, res: Response) => {
  * @param {Response} res - 일반적인 Response객체
  * @throws {Error} - 경매 id가 없는 경우, invalid access token인 경우, 경매가 끝난 경우, 더 높은 입찰이 있는 경우
  */
-export const regiserBid = async (req: registerAuctionReq, res: Response) => {
+export const registerBid = async (req: registerAuctionReq, res: Response) => {
   const auctionId = req.params.auctionId ? Number(req.params.auctionId) : undefined;
   const userId = req.user;
   const connection = await pool.getConnection();
@@ -249,7 +249,7 @@ export const regiserBid = async (req: registerAuctionReq, res: Response) => {
     await insertBid(auctionId, userId, price);
 
     await connection.commit();
-    res.status(201);
+    res.sendStatus(201);
   } catch (error) {
     await connection.rollback();
     handlerError(error, res);
