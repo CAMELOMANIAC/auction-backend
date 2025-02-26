@@ -6,6 +6,7 @@ import {
   insertAuction,
   insertBid,
   insertImageUrl,
+  insertViewer,
   selectAuctionDetail,
   selectAuctionImage,
   selectAuctionList,
@@ -271,6 +272,31 @@ export const getViewerCount = async (req: Request, res: Response) => {
     }
     const viewerCount = await selectViewerCount(auctionId);
     res.json({ viewerCount });
+  } catch (error) {
+    handlerError(error, res);
+  }
+};
+
+/**
+ * 경매글에 조회자를 등록
+ *
+ * @async
+ * @param {registerAuctionReq} req - 경매글 id와 사용자 id가 포함된 인증된 Request객체
+ * @param {Response} res - 상태 코드를 반환할 Response객체
+ * @throws 에러 발생 시 에러를 처리하고 응답
+ */
+export const registerViewer = async (req: registerAuctionReq, res: Response) => {
+  const auctionId = req.params.auctionId ? Number(req.params.auctionId) : undefined;
+  const userId = req.user;
+  try {
+    if (!userId) {
+      throw new Error(errorCodeAnswer[ErrorCode.INVAILD_ACCESS_TOKEN].message);
+    }
+    if (!auctionId) {
+      throw new Error(errorCodeAnswer[ErrorCode.AUCTION_ID_REQUIRED].message);
+    }
+    await insertViewer(auctionId, userId);
+    res.sendStatus(201);
   } catch (error) {
     handlerError(error, res);
   }

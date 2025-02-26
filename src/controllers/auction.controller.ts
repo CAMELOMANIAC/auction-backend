@@ -371,3 +371,21 @@ export const selectViewerCount = async (auctionId: number): Promise<number> => {
   console.log("경매상품 글 검색 완료", row);
   return row[0].viewer_count;
 };
+
+/**
+ * 경매상품의 조회테이블에 새로운 사용자를 추가
+ *
+ * @async
+ * @throws
+ * @param {number} auctionId - 경매상품의 auction_id
+ */
+export const insertViewer = async (auctionId: number, userId: string): Promise<void> => {
+  const [result] = await pool.execute<ResultSetHeader>(
+    `INSERT INTO viewer_table (auction_id, user_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE viewer_ind = viewer_ind`,
+    [auctionId, userId]
+  );
+  if (result.affectedRows === 0) {
+    throw new Error(errorCodeAnswer[ErrorCode.NO_ROWS_AFFECTED].message);
+  }
+  console.log("경매상품 조회자 삽입 완료", result);
+};

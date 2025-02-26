@@ -8,6 +8,7 @@ import {
   getViewerCount,
   registerBid,
   registerAuction,
+  registerViewer,
 } from "../services/auction.service";
 import upload from "../middlewares/binaryParserMiddleware";
 const router = Router();
@@ -24,5 +25,6 @@ router.get("/:auctionId/image", getAuctionImage);
 router.get("/:auctionId/bid", getBidList);
 router.post("/:auctionId/bid", authMiddleware, registerBid);
 router.get("/:auctionId/viewer-count", getViewerCount);
+router.post("/:auctionId/viewer-count", authMiddleware, registerViewer);
 
 export default router;
