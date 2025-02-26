@@ -253,7 +253,7 @@ export const selectAuctionList = async (
        FROM viewer_table 
        GROUP BY auction_id) v ON a.auction_id = v.auction_id
   LEFT JOIN 
-      (SELECT auction_id, COUNT(*) AS bid_count, MAX(price) AS price 
+      (SELECT auction_id, COUNT(DISTINCT bidder) AS bid_count, MAX(price) AS price 
        FROM bid_table 
        GROUP BY auction_id) b ON a.auction_id = b.auction_id
   LEFT JOIN 
@@ -317,7 +317,7 @@ export const selectAuctionImage = async (auctionId: number): Promise<RowDataPack
     auctionId,
   ]);
   console.log("경매상품 이미지 검색 완료", row);
-  return row;
+  return row.map((row) => row.image_url);
 };
 
 /**
