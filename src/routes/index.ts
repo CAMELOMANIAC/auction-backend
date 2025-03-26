@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import userRouter from "./users";
 import authRouter from "./auth";
 import auctionRouter from "./auction";
+import notificationRouter from "./notification";
 
 const router = Router();
 
@@ -17,5 +18,7 @@ router.use("/users", userRouter);
 router.use("/auth", authRouter);
 
 router.use("/auction", auctionRouter);
+
+router.use("/notification", notificationRouter);
 
 export default router;
